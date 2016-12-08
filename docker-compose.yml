@@ -1,0 +1,78 @@
+version: '2'
+
+services:
+    mysql:
+        image: mysql:5.6
+        ports:
+            - 3306:3306
+        volumes:
+            - /var/lib/mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD:
+            MYSQL_DATABASE: docker
+            MYSQL_USER: docker
+            MYSQL_PASSWORD: docker
+            MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+
+    nginx:
+        image: nginx:1.10.2
+        ports:
+            - 80:80
+        restart: always
+        volumes:
+            - ./sites:/etc/nginx/conf.d
+            - ~/Projects:/code
+        links:
+            - php
+        depends_on:
+            - php
+
+    php:
+        build: php
+        expose:
+            - 9000
+        restart: always
+        volumes:
+            - ./php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+            - ~/Projects:/code
+        environment:
+            XDEBUG_CONFIG: remote_host=172.16.1.10
+        links:
+            - mysql
+            - redis
+            - mongo
+            - blackfire
+
+    blackfire:
+        image: blackfire/blackfire
+        environment:
+            - BLACKFIRE_SERVER_ID
+            - BLACKFIRE_SERVER_TOKEN
+
+    mongo:
+        image: mongo
+        ports:
+            - 27017:27017
+        restart: always
+        volumes:
+            - /data/db
+
+    redis:
+        image: redis:alpine
+        ports:
+            - 6379:6379
+        restart: always
+
+    # influxdb:
+    #     image: influxdb
+    #     ports:
+    #         - 8083:8083
+    #         - 8086:8086
+
+    # grafana:
+    #     image: grafana/grafana
+    #     ports:
+    #         - 3000:3000
+    #     links:
+    #         - influxdb
