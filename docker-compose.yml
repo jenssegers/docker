@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
     mysql:
@@ -7,62 +7,51 @@ services:
             - 3306:3306
         volumes:
             - /var/lib/mysql
-        restart: always
         environment:
             MYSQL_ROOT_PASSWORD:
             MYSQL_DATABASE: docker
             MYSQL_USER: docker
             MYSQL_PASSWORD: docker
             MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        container_name: jens_mysql
 
     nginx:
-        image: nginx:1.10.2
+        image: nginx:1-alpine
         ports:
             - 80:80
-        restart: always
         volumes:
             - ./sites:/etc/nginx/conf.d
             - ~/Projects:/code
-        links:
-            - php
         depends_on:
             - php
+        container_name: jens_nginx
 
     php:
-        build: php
-        expose:
-            - 9000
-        restart: always
+        image: jenssegers/php:fpm
         volumes:
             - ./php/php.ini:/usr/local/etc/php/conf.d/custom.ini
             - ~/Projects:/code
         environment:
             XDEBUG_CONFIG: remote_host=172.16.1.10
-        links:
-            - mysql
-            - redis
-            - mongo
-            - blackfire
+        container_name: jens_php
 
-    blackfire:
-        image: blackfire/blackfire
-        environment:
-            - BLACKFIRE_SERVER_ID
-            - BLACKFIRE_SERVER_TOKEN
+    # blackfire:
+    #     image: blackfire/blackfire
+    #     environment:
+    #         - BLACKFIRE_SERVER_ID
+    #         - BLACKFIRE_SERVER_TOKEN
 
-    mongo:
-        image: mongo
-        ports:
-            - 27017:27017
-        restart: always
-        volumes:
-            - /data/db
+    # mongo:
+    #     image: mongo
+    #     ports:
+    #         - 27017:27017
+    #     volumes:
+    #         - /data/db
 
-    redis:
-        image: redis:alpine
-        ports:
-            - 6379:6379
-        restart: always
+    # redis:
+    #     image: redis:alpine
+    #     ports:
+    #         - 6379:6379
 
     # influxdb:
     #     image: influxdb
